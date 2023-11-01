@@ -23,8 +23,8 @@ pnpm add consoloo
 
 ```ts
 import { createBaseLogger } from 'consoloo/core'
-import { createNodeLogger } from 'consoloo'
-import { createFileTransport } from 'consoloo/browser'
+import { createFileTransport, createNodeLogger } from 'consoloo'
+import { createBrowserLogger } from 'consoloo/browser'
 
 // basic
 const logger = createBaseLogger()
