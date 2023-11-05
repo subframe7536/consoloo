@@ -19,31 +19,42 @@ type LogFile = {
    */
   maxSize?: number
 }
-export type FilePathOrTransportOptions = string | Arrayable<LogFile>
-type ParsedOption = Record<TransportLevel, Required<Omit<LogFile, 'level'>>>
 
-function parseOptions(options: FilePathOrTransportOptions): ParsedOption {
+export type FormatterFn<T extends LogScope = string> = (data: Parameters<TransportFn<T>>[0]) => string
+
+export type FileTransportOptions<T extends LogScope = string> = {
+  /**
+   * file path or arrayable {@link LogFile}
+   */
+  file: string | Arrayable<LogFile>
+  /**
+   * custom formatter
+   * @param data log data
+   */
+  formatter?: FormatterFn<T>
+}
+type ParsedFiles = Record<TransportLevel, Required<Omit<LogFile, 'level'>>>
+
+function parseOptions(file: FileTransportOptions['file']): ParsedFiles {
   const base = {
     dest: '',
     maxSize: 1 << 22, // 4MB
   }
-  const parsedOption: ParsedOption = {
+  const parsedOption: ParsedFiles = {
     debug: base,
     info: base,
     warn: base,
     error: base,
     timer: base,
   }
-  if (typeof options === 'string') {
+  if (typeof file === 'string') {
     for (const key of Object.keys(parsedOption)) {
-      parsedOption[key as TransportLevel].dest = options
+      parsedOption[key as TransportLevel].dest = file
     }
     return parsedOption
   }
-  if (!Array.isArray(options)) {
-    options = [options]
-  }
-  for (let { dest, level, maxSize } of options) {
+  file = Array.isArray(file) ? file : [file]
+  for (const { dest, level, maxSize } of file) {
     const levels = level
       ? Array.isArray(level)
         ? level
@@ -65,7 +76,7 @@ function assertFileSize(file: string, maxSize: number) {
     renameSync(file, `${file}.${new Date().getTime()}.bak`)
   }
 }
-function assertFileExist(option: ParsedOption) {
+function assertFileExist(option: ParsedFiles) {
   for (const { dest } of Object.values(option)) {
     const dir = dirname(dest)
     if (!existsSync(dir)) {
@@ -78,13 +89,14 @@ function assertFileExist(option: ParsedOption) {
 }
 
 export function createFileTransport<T extends LogScope>(
-  dest: FilePathOrTransportOptions,
+  options: FileTransportOptions<T>,
 ): TransportFn<T> {
-  const options = parseOptions(dest)
-  assertFileExist(options)
-  return ({ plainLog, level }) => {
-    const { dest, maxSize } = options[level]
+  const { file, formatter } = options
+  const parsedFiles = parseOptions(file)
+  assertFileExist(parsedFiles)
+  return (data) => {
+    const { dest, maxSize } = parsedFiles[data.level]
     assertFileSize(dest, maxSize)
-    appendFileSync(dest, `${plainLog}\n`)
+    appendFileSync(dest, `${formatter?.(data) || data.plainLog}\n`)
   }
 }

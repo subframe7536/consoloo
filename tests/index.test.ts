@@ -30,7 +30,7 @@ scopeLogger.warn('test change scope')
 const logPath = 'tests/log/test.log'
 const fileLogger = createNodeLogger<'file' | 'test'>({
   logMode: 'debug',
-  transports: createFileTransport(logPath),
+  transports: createFileTransport({ file: logPath }),
 })
 fileLogger.debug('info', 'file')
 try {

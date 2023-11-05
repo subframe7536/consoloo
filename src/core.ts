@@ -1,7 +1,11 @@
 /* eslint-disable antfu/consistent-list-newline */
+import type { LiteralOrString } from '@subframe7536/type-utils'
 import type { Keys, LogLevel, LogMode, LogScope, Logger } from './type'
 
+export * from 'normal-error'
+
 const _LEVEL: LogLevel[] = ['debug', 'info', 'warn', 'error']
+
 export function defaultOnLog<T extends LogScope = string>(msg: any, level: LogLevel, scope?: Keys<T>, e?: unknown) {
   console.log(
     `[${new Date().toISOString()}]`,
@@ -10,7 +14,8 @@ export function defaultOnLog<T extends LogScope = string>(msg: any, level: LogLe
     e || '',
   )
 }
-export function defaultOnTimer<T extends LogScope = string>(label: Keys<T>) {
+
+export function defaultOnTimer<T extends LogScope = string>(label: LiteralOrString<Keys<T>>) {
   console.time(label)
   return () => {
     console.timeEnd(label)

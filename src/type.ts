@@ -1,4 +1,4 @@
-import type { Prettify } from '@subframe7536/type-utils'
+import type { LiteralOrString, Prettify } from '@subframe7536/type-utils'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -23,7 +23,7 @@ type LogUtilFn<S extends LogScope> = {
    * @param mode {@link LogMode}
    */
   setLogMode: (mode: LogMode) => void
-  timer: (label: Keys<S> & string) => () => void
+  timer: (label: LiteralOrString<Keys<S>>) => () => void
 }
 
 type LogBaseFn<S extends LogScope, WithScope extends boolean = true> = {
