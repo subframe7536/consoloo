@@ -1,8 +1,9 @@
-/* eslint-disable antfu/consistent-list-newline */
 import type { LiteralOrString } from '@subframe7536/type-utils'
 import type { Keys, LogLevel, LogMode, LogScope, Logger } from './type'
 
 export * from 'normal-error'
+
+export type { LogLevel, LogMode, Logger } from './type'
 
 const _LEVEL: LogLevel[] = ['debug', 'info', 'warn', 'error']
 
@@ -31,8 +32,8 @@ export function createLogger<T extends LogScope = string>(
     // #hack: e is unknown when level = 'error', else e is scope
     (msg: any, e?: any, scope?: string) =>
       ((mode === _LEVEL[3] && level > 2)
-        || (mode === _LEVEL[1] && level > 0)
-        || (mode === _LEVEL[0]))
+      || (mode === _LEVEL[1] && level > 0)
+      || (mode === _LEVEL[0]))
       && onLog(msg, _LEVEL[level], ...(level > 2 ? [s || scope, e] : [s || e]))
   let withScope = (scope?: string) => ({
     debug: filter(0, scope),
