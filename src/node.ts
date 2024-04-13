@@ -87,7 +87,7 @@ export function createNodeLoggerConfig(
       let plainLog = `${_time} | ${label}: ${duration}`
       console.log(
         pico.isColorSupported
-          ? `${colors.time(_time)} | ${pico.bgCyan(` ${label} `)} ${duration}`
+          ? `${colors.time(_time)} | ${pico.bold(pico.bgCyan(` ${label} `))} ${duration}`
           : plainLog,
       )
       transports?.forEach(t => t({ time, plainLog, level: 'timer', msg: duration, scope: label }))
@@ -135,7 +135,7 @@ export function parseStack(stack: string) {
     )
   return [_s[0].replace(
     /(.*): (.*)/,
-    (_, level, msg) => `${pico.bgRed(` ${level} `)} ${pico.bold(msg)}`,
+    (_, level, msg) => `${pico.bold(pico.bgRed(` ${level} `))} ${pico.bold(msg)}`,
   )]
     .concat(_stack)
     .join(EOL)
