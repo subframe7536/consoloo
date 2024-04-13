@@ -1,10 +1,11 @@
 {
   "name": "consoloo",
   "type": "module",
-  "version": "0.8.2",
+  "version": "1.0.0",
   "description": "colorful logger for nodejs and browser",
   "author": "subframe7536",
   "license": "MIT",
+  "repository": "https://github.com/subframe7536/consoloo",
   "keywords": [
     "console",
     "logger"
@@ -36,7 +37,7 @@
     "test": "esno tests/index.test.ts",
     "test:clean": "esno tests/index.test.ts clean",
     "lint": "eslint . --fix",
-    "release": "pnpm test:clean && pnpm build && bumpp && npm publish"
+    "release": "pnpm test:clean && pnpm build && bumpp --all && npm publish"
   },
   "publishConfig": {
     "access": "public",
