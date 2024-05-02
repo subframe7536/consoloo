@@ -8,6 +8,14 @@ const cleanTempFile = process.argv.includes('clean')
 
 const logger = createBaseLogger()
 
+const da = {
+  a: {
+    b: {
+      c: 1,
+    },
+  },
+}
+
 logger.info('info')
 logger.warn('warn')
 logger.error('error')
@@ -24,6 +32,7 @@ node.error('error')
 node.setLogMode('debug')
 node.withScope('with').debug('test withScope')
 node.info('test inline scope', 'inline')
+node.info(da, 'data')
 const scopeLogger = node.withScope('foo')
 scopeLogger.warn('test change scope')
 
@@ -38,6 +47,8 @@ try {
 } catch (error) {
   fileLogger.error('test error in file', error)
 }
+node.setLogMode('disable')
+node.error(new Error('err'))
 stop()
 console.log()
 if (cleanTempFile) {

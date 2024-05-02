@@ -49,10 +49,10 @@
     "picocolors": "^1.0.0"
   },
   "devDependencies": {
-    "@subframe7536/eslint-config": "^0.6.1",
-    "@types/node": "^20.12.7",
-    "bumpp": "^9.4.0",
-    "eslint": "^9.0.0",
+    "@subframe7536/eslint-config": "^0.6.2",
+    "@types/node": "^20.12.8",
+    "bumpp": "^9.4.1",
+    "eslint": "^9.1.1",
     "tsup": "^8.0.2",
     "typescript": "^5.4.5"
   }
