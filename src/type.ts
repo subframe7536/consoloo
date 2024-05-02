@@ -14,8 +14,8 @@ export type Keys<S extends LogScope> = S extends Record<string, string>
 
 type LogFn<Level extends LogLevel, S extends LogScope, WithScope extends boolean> =
   Level extends 'error'
-    ? (msg: any, e?: unknown, ...args: WithScope extends true ? [scope?: Keys<S>] : []) => void
-    : (msg: any, ...args: WithScope extends true ? [scope?: Keys<S>] : []) => void
+    ? (msg: string | object, e?: unknown, ...args: WithScope extends true ? [scope?: Keys<S>] : []) => void
+    : (msg: string | object, ...args: WithScope extends true ? [scope?: Keys<S>] : []) => void
 
 type LogUtilFn<S extends LogScope> = {
   /**

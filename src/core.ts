@@ -1,11 +1,10 @@
 import type { LiteralOrString } from '@subframe7536/type-utils'
 import type { Keys, LogLevel, LogMode, LogScope, Logger } from './type'
+import { _LEVEL } from './utils'
 
 export * from 'normal-error'
 
 export type { LogLevel, LogMode, Logger } from './type'
-
-const _LEVEL: LogLevel[] = ['debug', 'info', 'warn', 'error']
 
 export function defaultOnLog<T extends LogScope = string>(msg: any, level: LogLevel, scope?: Keys<T>, e?: unknown) {
   console.log(

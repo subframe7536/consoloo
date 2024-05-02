@@ -5,6 +5,7 @@ import { isError, toNormalizedError } from 'normal-error'
 import type { Arrayable } from '@subframe7536/type-utils'
 import type { Keys, LogLevel, LogMode, LogScope } from './type'
 import { createLogger } from './core'
+import { parseArray } from './utils'
 
 const colors = {
   info: pico.green,
@@ -37,6 +38,9 @@ export type NodeLoggerOption<T extends LogScope = string> = {
    * built-in: {@link createFileTransport}
    */
   transports?: Arrayable<TransportFn<T>>
+  /**
+   * log time format function
+   */
   timeFormat?: (date: Date) => string
 }
 
@@ -58,7 +62,7 @@ export function createNodeLoggerConfig(
     let _msg = parseMsg(msg)
     let _time = timeFormat(time)
     let _scope = scope?.padEnd(7) || 'default'
-    const renderLog = () => [_time, _level, _scope, `${_msg}${e ? `\n${_stack}` : ''}`].join(' | ')
+    const renderLog = () => [_time, _level, _scope, _msg + (e ? '\n' + _stack : '')].join(' | ')
     const plainLog = renderLog()
     let terminalLog = plainLog
     if (pico.isColorSupported) {
@@ -97,26 +101,15 @@ export function createNodeLoggerConfig(
   return [onNodeLog, onNodeTimer]
 }
 
-export function parseMsg(msg: any) {
+export function parseMsg(msg: any): string {
   try {
-    switch (typeof msg) {
-      case 'string':
-        return msg
-      case 'undefined':
-        return ''
-      case 'object':
-        return isError(msg)
-          ? msg.message
-          : JSON.stringify(msg, null, 2)
-      case 'symbol':
-      case 'number':
-      case 'bigint':
-      case 'boolean':
-      case 'function':
-        return msg.toString()
-    }
+    return typeof msg === 'string'
+      ? msg
+      : isError(msg)
+        ? msg.message
+        : JSON.stringify(msg)
   } catch (error) {
-    return `${msg}`
+    return '' + msg
   }
 }
 
@@ -146,12 +139,8 @@ export function parseStack(stack: string) {
  * @param option logger options, logMode default to `'normal'`
  */
 export function createNodeLogger<T extends LogScope = string>(option: NodeLoggerOption<T> = {}) {
-  const { logMode = 'info', timeFormat, transports: transport } = option
-  const transports = transport
-    ? Array.isArray(transport)
-      ? transport
-      : [transport]
-    : undefined
+  const { logMode = 'info', timeFormat, transports } = option
+  const list = transports ? parseArray(transports) : undefined
 
-  return createLogger<T>(logMode, ...createNodeLoggerConfig(transports, timeFormat))
+  return createLogger<T>(logMode, ...createNodeLoggerConfig(list, timeFormat))
 }
