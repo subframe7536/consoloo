@@ -32,10 +32,10 @@
     "dist"
   ],
   "scripts": {
-    "dev": "tsup --watch",
+    "dev": "vite serve dev",
     "build": "tsup",
-    "test": "esno tests/index.test.ts",
-    "test:clean": "esno tests/index.test.ts clean",
+    "test": "bun tests/index.test.ts",
+    "test:clean": "bun tests/index.test.ts clean",
     "lint": "eslint . --fix",
     "release": "pnpm test:clean && pnpm build && bumpp --all && npm publish"
   },
@@ -45,15 +45,16 @@
   },
   "dependencies": {
     "@subframe7536/type-utils": "^0.1.6",
-    "normal-error": "^0.2.0",
-    "picocolors": "^1.0.0"
+    "colorette": "^2.0.20",
+    "normal-error": "^0.2.0"
   },
   "devDependencies": {
-    "@subframe7536/eslint-config": "^0.6.2",
-    "@types/node": "^20.12.8",
-    "bumpp": "^9.4.1",
-    "eslint": "^9.1.1",
-    "tsup": "^8.0.2",
-    "typescript": "^5.4.5"
+    "@subframe7536/eslint-config": "^0.8.0",
+    "@types/node": "^20.16.2",
+    "bumpp": "^9.5.2",
+    "eslint": "^9.9.1",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
   }
 }

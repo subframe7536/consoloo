@@ -1,19 +1,19 @@
 import { EOL } from 'node:os'
-import pico from 'picocolors'
+import { bgCyan, bgRed, blue, bold, cyan, dim, green, isColorSupported, magenta, red, yellow } from 'colorette'
 import type { NormalizedError } from 'normal-error'
 import { isError, toNormalizedError } from 'normal-error'
 import type { Arrayable } from '@subframe7536/type-utils'
-import type { Keys, LogLevel, LogMode, LogScope } from './type'
+import type { Keys, LogLevel, LogMode, LogScope, LoggerOption } from './type'
 import { createLogger } from './core'
 import { parseArray } from './utils'
 
 const colors = {
-  info: pico.green,
-  debug: pico.blue,
-  warn: pico.yellow,
-  error: pico.red,
-  scope: pico.cyan,
-  time: pico.magenta,
+  info: green,
+  debug: blue,
+  warn: yellow,
+  error: red,
+  scope: cyan,
+  time: magenta,
 }
 
 export type TransportLevel = LogLevel | 'timer'
@@ -26,29 +26,20 @@ export type TransportFn<T extends LogScope = string> = (data: {
   scope?: Keys<T>
   e?: NormalizedError
 }) => void
-export type NodeLoggerOption<T extends LogScope = string> = {
-  /**
-   * log mode
-   * @default 'normal'
-   */
-  logMode?: LogMode
+export type NodeLoggerOption<T extends LogScope = string> = LoggerOption & {
   /**
    * log transports
    *
    * built-in: {@link createFileTransport}
    */
   transports?: Arrayable<TransportFn<T>>
-  /**
-   * log time format function
-   */
-  timeFormat?: (date: Date) => string
 }
 
 const cwdRegexp = new RegExp(process.cwd().replace(/\\/g, '/'), 'i')
 
 export function createNodeLoggerConfig(
   transports?: TransportFn<any>[],
-  timeFormat: (date: Date) => string = date => date.toLocaleTimeString(),
+  timeFormat: (date: Date) => string = date => date.toLocaleString(),
 ): [any, any] {
   function getReadableLog(
     time: Date,
@@ -65,9 +56,9 @@ export function createNodeLoggerConfig(
     const renderLog = () => [_time, _level, _scope, _msg + (e ? '\n' + _stack : '')].join(' | ')
     const plainLog = renderLog()
     let terminalLog = plainLog
-    if (pico.isColorSupported) {
+    if (isColorSupported) {
       _level = colors[level](_level)
-      _scope = scope ? colors.scope(_scope) : pico.dim(_scope)
+      _scope = scope ? colors.scope(_scope) : dim(_scope)
       _time = colors.time(_time)
       e && (_stack = parseStack(e.stack))
       terminalLog = renderLog()
@@ -90,8 +81,8 @@ export function createNodeLoggerConfig(
       let _time = timeFormat(time)
       let plainLog = `${_time} | ${label}: ${duration}`
       console.log(
-        pico.isColorSupported
-          ? `${colors.time(_time)} | ${pico.bold(pico.bgCyan(` ${label} `))} ${duration}`
+        isColorSupported
+          ? `${colors.time(_time)} | ${bold(bgCyan(` ${label} `))} ${duration}`
           : plainLog,
       )
       transports?.forEach(t => t({ time, plainLog, level: 'timer', msg: duration, scope: label }))
@@ -122,21 +113,21 @@ export function parseStack(stack: string) {
       .replace(/\\/g, '/')
       .replace(cwdRegexp, '.')
       .replace('node:internal/', 'node:')
-      .replace(' at', () => pico.blue('@'))
-      .replace(/:(\d+):(\d+)/, pico.green)
-      .replace(/\((.*)\)/, (_, path) => `(${pico.yellow(path)})`),
+      .replace(' at', () => blue('@'))
+      .replace(/:(\d+):(\d+)/, green)
+      .replace(/\((.*)\)/, (_, path) => `(${yellow(path)})`),
     )
   return [_s[0].replace(
     /(.*): (.*)/,
-    (_, level, msg) => `${pico.bold(pico.bgRed(` ${level} `))} ${pico.bold(msg)}`,
+    (_, level, msg) => `${bold(bgRed(` ${level} `))} ${bold(msg)}`,
   )]
     .concat(_stack)
     .join(EOL)
 }
 
 /**
- * create default node logger
- * @param option logger options, logMode default to `'normal'`
+ * Create default node logger
+ * @param option logger options, logMode default to `'info'`
  */
 export function createNodeLogger<T extends LogScope = string>(option: NodeLoggerOption<T> = {}) {
   const { logMode = 'info', timeFormat, transports } = option

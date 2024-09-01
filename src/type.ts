@@ -37,3 +37,15 @@ export type Logger<S extends LogScope> = Prettify<LogBaseFn<S> & LogUtilFn<S> & 
    */
   withScope: (scope: Keys<S>) => Prettify<LogBaseFn<S, false> & LogUtilFn<S>>
 }>
+
+export type LoggerOption = {
+  /**
+   * log mode
+   * @default 'normal'
+   */
+  logMode?: LogMode
+  /**
+   * log time format function
+   */
+  timeFormat?: (date: Date) => string
+}
