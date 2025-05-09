@@ -3,7 +3,7 @@ import { dirname } from 'node:path'
 
 import { createBaseLogger } from '../src/core'
 import { createNodeLogger } from '../src/node'
-import { createFileTransport } from '../src/transport'
+import { createFileReporter } from '../src/reporter/file'
 
 const cleanTempFile = process.argv.includes('clean')
 
@@ -37,21 +37,27 @@ node.info(da, 'data')
 const scopeLogger = node.withScope('foo')
 scopeLogger.warn('test change scope')
 
-const logPath = 'tests/log/test.log'
+const logDir = 'tests/log'
 const fileLogger = createNodeLogger<'file' | 'test'>({
   logMode: 'debug',
-  transports: createFileTransport({ file: logPath }),
+  reporter: [createFileReporter({ logDir })],
 })
 fileLogger.debug('info', 'file')
+// for (let i = 0; i < 1e4; i++) {
+//   fileLogger.debug(Array.from({ length: 20 }, () => '测试'))
+// }
 try {
   throw new Error('test error in file')
 } catch (error) {
   fileLogger.error('test error in file', error)
 }
+
 node.setLogMode('disable')
 node.error(new Error('err'))
 stop()
 console.log()
 if (cleanTempFile) {
-  rmSync(dirname(logPath), { recursive: true })
+  setTimeout(() => {
+    rmSync(logDir, { recursive: true })
+  }, 500)
 }

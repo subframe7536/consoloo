@@ -22,7 +22,7 @@ pnpm add consoloo
 ### usage
 
 ```ts
-import { createFileTransport, createNodeLogger } from 'consoloo'
+import { createFileReporter, createNodeLogger } from 'consoloo'
 import { createBrowserLogger } from 'consoloo/browser'
 import { createBaseLogger } from 'consoloo/core'
 
@@ -41,10 +41,9 @@ node.info('test inline scope', 'inline')
 const scopeLogger = node.withScope('foo')
 scopeLogger.warn('test change scope')
 
-const logPath = 'tests/log/test.log'
 const fileLogger = createNodeLogger<'file' | 'test'>({
   logMode: 'debug',
-  transports: createFileTransport(logPath),
+  reporter: [createFileReporter({ logDir: './logs' })],
 })
 fileLogger.debug('info', 'file') // typesafe scope
 try {

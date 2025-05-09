@@ -39,5 +39,5 @@ try {
   fileLogger.error('test error in file', error)
 }
 node.setLogMode('disable')
-node.error(new Error('err'))
+node.error(new Error('This text should never be logged'))
 stop()
