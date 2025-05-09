@@ -1,8 +1,10 @@
-import { appendFileSync, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
-import { dirname } from 'node:path'
-import type { Arrayable } from '@subframe7536/type-utils'
 import type { TransportFn, TransportLevel } from '../node'
 import type { Keys, LogScope } from '../type'
+import type { Arrayable } from '@subframe7536/type-utils'
+
+import { appendFileSync, existsSync, mkdirSync, renameSync, statSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
+
 import { _LEVEL, parseArray } from '../utils'
 
 type LogFile<T extends LogScope> = {
@@ -76,13 +78,13 @@ function parseOptions<T extends LogScope>(file: FileTransportOptions<T>['file'])
   return parsedOption
 }
 
-function assertFileSize(file: string, maxSize: number) {
+function assertFileSize(file: string, maxSize: number): void {
   const stat = statSync(file)
   if (stat.size > maxSize) {
     renameSync(file, `${file}.${new Date().getTime()}.bak`)
   }
 }
-function assertFileExist(option: ParsedFiles<any>) {
+function assertFileExist(option: ParsedFiles<any>): void {
   for (const { dest } of Object.values(option)) {
     const dir = dirname(dest)
     if (!existsSync(dir)) {

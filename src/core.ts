@@ -1,12 +1,18 @@
+import type { Keys, Logger, LogLevel, LogMode, LogScope } from './type'
 import type { LiteralOrString } from '@subframe7536/type-utils'
-import type { Keys, LogLevel, LogMode, LogScope, Logger } from './type'
+
 import { _LEVEL } from './utils'
+
+export type { Logger, LogLevel, LogMode } from './type'
 
 export * from 'normal-error'
 
-export type { LogLevel, LogMode, Logger } from './type'
-
-export function defaultOnLog<T extends LogScope = string>(msg: any, level: LogLevel, scope?: Keys<T>, e?: unknown) {
+export function defaultOnLog<T extends LogScope = string>(
+  msg: any,
+  level: LogLevel,
+  scope?: Keys<T>,
+  e?: unknown,
+): void {
   console.log(
     `[${new Date().toISOString()}]`,
     `${level.toUpperCase()}${scope ? `(${scope})` : ''}:`,
@@ -15,7 +21,7 @@ export function defaultOnLog<T extends LogScope = string>(msg: any, level: LogLe
   )
 }
 
-export function defaultOnTimer<T extends LogScope = string>(label: LiteralOrString<Keys<T>>) {
+export function defaultOnTimer<T extends LogScope = string>(label: LiteralOrString<Keys<T>>): VoidFunction {
   console.time(label)
   return () => {
     console.timeEnd(label)
@@ -31,10 +37,10 @@ export function createLogger<T extends LogScope = string>(
     // #hack: e is unknown when level = 'error', else e is scope
     (msg: any, e?: any, scope?: string) =>
       ((mode === _LEVEL[3] && level > 2)
-      || (mode === _LEVEL[1] && level > 0)
-      || (mode === _LEVEL[0]))
+        || (mode === _LEVEL[1] && level > 0)
+        || (mode === _LEVEL[0]))
       && onLog(msg, _LEVEL[level], ...(level > 2 ? [s || scope, e] : [s || e]))
-  let withScope = (scope?: string) => ({
+  let withScope = (scope?: string): any => ({
     debug: filter(0, scope),
     info: filter(1, scope),
     warn: filter(2, scope),
@@ -48,6 +54,6 @@ export function createLogger<T extends LogScope = string>(
   }
 }
 
-export function createBaseLogger<T extends LogScope = string>(logMode: LogMode = 'info') {
+export function createBaseLogger<T extends LogScope = string>(logMode: LogMode = 'info'): Logger<T> {
   return createLogger(logMode, defaultOnLog<T>, defaultOnTimer<T>)
 }

@@ -1,4 +1,5 @@
-import type { Keys, LogLevel, LogScope, LoggerOption } from './type'
+import type { Keys, Logger, LoggerOption, LogLevel, LogScope } from './type'
+
 import { createLogger } from './core'
 
 type BrowserLoggerOptions = LoggerOption
@@ -15,13 +16,18 @@ const levelColors = {
 
 const r = '.3rem'
 
-function renderBadge(bg: string, fg: string, radius = r) {
+function renderBadge(bg: string, fg: string, radius = r): string {
   return `font-size:.8rem;padding:.1rem .3rem;border-radius:${radius};background-color:${bg};color:${fg}`
 }
 export function createBrowserLoggerConfig(
   timeFormat: (date: Date) => string = date => date.toLocaleString(),
 ): [any, any] {
-  function onBrowserLog<T extends LogScope = string>(msg: any, level: LogLevel, scope?: Keys<T>, e?: unknown) {
+  function onBrowserLog<T extends LogScope = string>(
+    msg: any,
+    level: LogLevel,
+    scope?: Keys<T>,
+    e?: unknown,
+  ): void {
     let _msg = `%c${timeFormat(new Date())} %c${level.toUpperCase()}`
     const args = ['color:' + timeColor]
     if (scope) {
@@ -45,7 +51,7 @@ export function createBrowserLoggerConfig(
     e && console.error(e)
   }
 
-  function onBrowserTimer(label: string) {
+  function onBrowserTimer(label: string): VoidFunction {
     const start = Date.now()
     return () => console.log(
       `%c${timeFormat(new Date())} %c${label}%c ${(Date.now() - start).toFixed(2)}ms`,
@@ -61,7 +67,9 @@ export function createBrowserLoggerConfig(
  * Create default browser logger
  * @param options logger options, logMode default to `'info'`
  */
-export function createBrowserLogger<T extends LogScope = string>(options: BrowserLoggerOptions = {}) {
+export function createBrowserLogger<T extends LogScope = string>(
+  options: BrowserLoggerOptions = {},
+): Logger<T> {
   const { logMode = 'info', timeFormat } = options
   return createLogger<T>(logMode, ...createBrowserLoggerConfig(timeFormat))
 }

@@ -19,7 +19,7 @@ type LogFn<Level extends LogLevel, S extends LogScope, WithScope extends boolean
 
 type LogUtilFn<S extends LogScope> = {
   /**
-   * set logger log mode
+   * Set logger log mode
    * @param mode {@link LogMode}
    */
   setLogMode: (mode: LogMode) => void
@@ -32,7 +32,7 @@ type LogBaseFn<S extends LogScope, WithScope extends boolean = true> = {
 
 export type Logger<S extends LogScope> = Prettify<LogBaseFn<S> & LogUtilFn<S> & {
   /**
-   * create scope logger
+   * Create scope logger
    * @param scope log scope
    */
   withScope: (scope: Keys<S>) => Prettify<LogBaseFn<S, false> & LogUtilFn<S>>
@@ -40,12 +40,12 @@ export type Logger<S extends LogScope> = Prettify<LogBaseFn<S> & LogUtilFn<S> & 
 
 export type LoggerOption = {
   /**
-   * log mode
+   * Log mode
    * @default 'normal'
    */
   logMode?: LogMode
   /**
-   * log time format function
+   * Log time format function
    */
   timeFormat?: (date: Date) => string
 }

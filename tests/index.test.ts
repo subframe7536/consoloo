@@ -1,5 +1,6 @@
 import { rmSync } from 'node:fs'
 import { dirname } from 'node:path'
+
 import { createBaseLogger } from '../src/core'
 import { createNodeLogger } from '../src/node'
 import { createFileTransport } from '../src/transport'
