@@ -1,9 +1,12 @@
-import { EOL } from 'node:os'
-import { bgCyan, bgRed, blue, bold, cyan, dim, green, isColorSupported, magenta, red, yellow } from 'colorette'
-import type { NormalizedError } from 'normal-error'
-import { isError, toNormalizedError } from 'normal-error'
+import type { Keys, Logger, LoggerOption, LogLevel, LogScope } from './type'
 import type { Arrayable } from '@subframe7536/type-utils'
-import type { Keys, LogLevel, LogMode, LogScope, LoggerOption } from './type'
+import type { NormalizedError } from 'normal-error'
+
+import { EOL } from 'node:os'
+
+import ansis, { blue, bold, cyan, dim, green, magenta, red, yellow } from 'ansis'
+import { isError, toNormalizedError } from 'normal-error'
+
 import { createLogger } from './core'
 import { parseArray } from './utils'
 
@@ -35,8 +38,6 @@ export type NodeLoggerOption<T extends LogScope = string> = LoggerOption & {
   transports?: Arrayable<TransportFn<T>>
 }
 
-const cwdRegexp = new RegExp(process.cwd().replace(/\\/g, '/'), 'i')
-
 export function createNodeLoggerConfig(
   transports?: TransportFn<any>[],
   timeFormat: (date: Date) => string = date => date.toLocaleString(),
@@ -47,45 +48,44 @@ export function createNodeLoggerConfig(
     level: LogLevel,
     scope?: string,
     e?: NormalizedError,
-  ) {
-    let _stack = e?.stack
-    let _level = level.toUpperCase().padEnd(5)
-    let _msg = parseMsg(msg)
-    let _time = timeFormat(time)
-    let _scope = scope?.padEnd(7) || 'default'
-    const renderLog = () => [_time, _level, _scope, _msg + (e ? '\n' + _stack : '')].join(' | ')
-    const plainLog = renderLog()
-    let terminalLog = plainLog
-    if (isColorSupported) {
-      _level = colors[level](_level)
-      _scope = scope ? colors.scope(_scope) : dim(_scope)
-      _time = colors.time(_time)
-      e && (_stack = parseStack(e.stack))
-      terminalLog = renderLog()
-    }
-    return [plainLog, terminalLog]
+  ): string {
+    const _stack = e ? parseStack(e.stack) : e
+    const _level = colors[level](level.toUpperCase().padEnd(5))
+    const _msg = parseMsg(msg)
+    const _time = colors.time(timeFormat(time))
+    const _scope = scope ? colors.scope(scope.padEnd(7)) : dim`default`
+    return [_time, _level, _scope, _msg + (e ? '\n' + _stack : '')].join(' | ')
   }
-  function onNodeLog<T extends LogScope>(msg: any, level: LogLevel, scope?: Keys<T>, err?: unknown) {
+  function onNodeLog<T extends LogScope>(msg: any, level: LogLevel, scope?: Keys<T>, err?: unknown): void {
     const time = new Date()
     const e = err ? toNormalizedError(err) : undefined
-    const [plainLog, terminalLog] = getReadableLog(time, msg, level, scope, e)
+    const terminalLog = getReadableLog(time, msg, level, scope, e)
     console[level === 'error' ? 'error' : 'log'](terminalLog)
-    transports?.forEach(t => t({ plainLog, msg, time, level, scope, e }))
+    transports?.forEach(t => t({
+      plainLog: ansis.strip(terminalLog),
+      msg,
+      time,
+      level,
+      scope,
+      e,
+    }))
   }
 
   function onNodeTimer(label: string) {
     const start = Date.now()
     return () => {
-      let time = new Date()
-      let duration = `${(time.getTime() - start).toFixed(2)}ms`
-      let _time = timeFormat(time)
-      let plainLog = `${_time} | ${label}: ${duration}`
-      console.log(
-        isColorSupported
-          ? `${colors.time(_time)} | ${bold(bgCyan(` ${label} `))} ${duration}`
-          : plainLog,
-      )
-      transports?.forEach(t => t({ time, plainLog, level: 'timer', msg: duration, scope: label }))
+      const time = new Date()
+      const duration = `${(time.getTime() - start).toFixed(2)}ms`
+      const _time = timeFormat(time)
+      const logString = `${colors.time(_time)} | ${bold.bgCyan(` ${label} `)} ${duration}`
+      console.log(logString)
+      transports?.forEach(t => t({
+        time,
+        plainLog: ansis.strip(logString),
+        level: 'timer',
+        msg: duration,
+        scope: label,
+      }))
     }
   }
 
@@ -99,27 +99,30 @@ export function parseMsg(msg: any): string {
       : isError(msg)
         ? msg.message
         : JSON.stringify(msg)
-  } catch (error) {
+  } catch {
     return '' + msg
   }
 }
 
-export function parseStack(stack: string) {
+const CWD_REGEXP = new RegExp(process.cwd().replace(/\\/g, '/'), 'i')
+const LOCATION_REGEX = /:[^)]+/
+const PAREN_REGEX = /\((.*)\)/
+const BACK_SLASH_REGEX = /\\/g
+export function parseStack(stack: string): string {
   const _s = stack.split(/\r?\n/)
   const _stack = _s
     .slice(1)
     .map(l => l
       .replace('file://', '')
-      .replace(/\\/g, '/')
-      .replace(cwdRegexp, '.')
-      .replace('node:internal/', 'node:')
-      .replace(' at', () => blue('@'))
-      .replace(/:(\d+):(\d+)/, green)
-      .replace(/\((.*)\)/, (_, path) => `(${yellow(path)})`),
+      .replace(' at', blue`@`)
+      .replace(BACK_SLASH_REGEX, '/')
+      .replace(CWD_REGEXP, '.')
+      .replace(LOCATION_REGEX, green)
+      .replace(PAREN_REGEX, (_, path) => `(${yellow(path)})`),
     )
   return [_s[0].replace(
     /(.*): (.*)/,
-    (_, level, msg) => `${bold(bgRed(` ${level} `))} ${bold(msg)}`,
+    (_, level, msg) => `${bold.bgRed` ${level} `} ${bold(msg)}`,
   )]
     .concat(_stack)
     .join(EOL)
@@ -129,7 +132,7 @@ export function parseStack(stack: string) {
  * Create default node logger
  * @param option logger options, logMode default to `'info'`
  */
-export function createNodeLogger<T extends LogScope = string>(option: NodeLoggerOption<T> = {}) {
+export function createNodeLogger<T extends LogScope = string>(option: NodeLoggerOption<T> = {}): Logger<T> {
   const { logMode = 'info', timeFormat, transports } = option
   const list = transports ? parseArray(transports) : undefined
 
