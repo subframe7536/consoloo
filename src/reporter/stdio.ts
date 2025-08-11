@@ -69,7 +69,7 @@ export function createStdioReporter<T extends string>(
 ): Reporter<T> {
   return (date, msg, level, scope, e) => {
     if (level === 'timer') {
-      console.log(`${colors.time(timeFormat(date))} | ${bold.bgCyan(` ${scope} `)} ${msg}`)
+      process.stdout.write(`${colors.time(timeFormat(date))} | ${bold.bgCyan(` ${scope} `)} ${msg}`)
       return
     }
     let terminalLog = [
