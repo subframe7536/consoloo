@@ -101,13 +101,13 @@ export function createFileReporter<T extends string>(
   }
 
   function getFileInfo(level: LogLevel | 'timer', scope?: T): FileInfo {
-    const paramKey = `${level}:${scope}`
+    const paramKey = level + ':' + scope
     const existingInfo = fileMap.get(paramKey)
 
     // Rotate if size exceeds the limit
     if (existingInfo && existingInfo.size >= maxBytes) {
       closeSync(existingInfo.fd)
-      rotateFile(i => `${existingInfo.path}${i ? `.${i}` : ''}.log`)
+      rotateFile(i => existingInfo.path + (i ? ('.' + i) : '') + '.log')
       fileMap.delete(paramKey)
     }
 
@@ -115,7 +115,7 @@ export function createFileReporter<T extends string>(
     let info = fileMap.get(paramKey)
     if (!info) {
       const path = join(logDir, getLogFileName(level, scope))
-      const fd = openSync(`${path}.log`, 'a')
+      const fd = openSync(path + '.log', 'a')
       try {
         const { size } = fstatSync(fd)
         info = { path, fd, size }
@@ -131,7 +131,7 @@ export function createFileReporter<T extends string>(
 
   return (date, msg, level, scope, e) => {
     const info = getFileInfo(level, scope as T)
-    const message = `${logMessage(date, msg, level as any, scope as T, e, timeFormat)}\n`
+    const message = logMessage(date, msg, level as any, scope as T, e, timeFormat) + '\n'
     info.size += writeSync(info.fd, Buffer.from(message))
   }
 }

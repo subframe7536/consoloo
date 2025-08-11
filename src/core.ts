@@ -26,7 +26,7 @@ export function createLogger<T extends string>(
       timer: (label: any) => {
         let start = Date.now(), d: Date
         return () => (
-          d = new Date(), rep(d, `${(d.getTime() - start).toFixed(2)}ms`, 'timer', label)
+          d = new Date(), rep(d, (d.getTime() - start).toFixed(2) + 'ms', 'timer', label)
         )
       },
       setLogMode: (m: LogMode) => mode = m,
