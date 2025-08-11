@@ -1,6 +1,14 @@
 import type { LogLevel, Reporter } from '../type'
 
-import { appendFileSync, existsSync, mkdirSync, renameSync, statSync } from 'node:fs'
+import {
+  closeSync,
+  existsSync,
+  fstatSync,
+  mkdirSync,
+  openSync,
+  renameSync,
+  writeSync,
+} from 'node:fs'
 import { join } from 'node:path'
 
 export interface FileReporterOptions<T extends string> {
@@ -59,7 +67,13 @@ export function createFileReporter<T extends string>(
     getLogFileName = () => 'app',
   } = options
 
-  const fileMap = new Map<string, string>()
+  interface FileInfo {
+    path: string
+    fd: number
+    size: number
+  }
+
+  const fileMap = new Map<string, FileInfo>()
   const maxBytes = maxSize << 20 // Convert MB to bytes
 
   // Ensure log directory exists once at initialization
@@ -77,31 +91,36 @@ export function createFileReporter<T extends string>(
     }
   }
 
-  function getPath(level: LogLevel | 'timer', scope?: string): string {
-    const name = join(logDir, getLogFileName(level, scope as T))
-
+  function getFileInfo(level: LogLevel | 'timer', scope?: T): FileInfo {
     const paramKey = `${level}:${scope}`
-    let filePath = fileMap.get(paramKey)
-    if (!filePath) {
-      filePath = name + '.log'
-      fileMap.set(paramKey, filePath)
-    }
-    try {
-      const stats = statSync(filePath)
-      if (stats.size >= maxBytes) {
-        rotateFile(i => i ? name + '.' + i + '.log' : filePath)
-      }
-    } catch (e) {
-      if ((e as { code: string }).code !== 'ENOENT') {
+    let info = fileMap.get(paramKey)
+
+    if (!info) {
+      const path = join(logDir, getLogFileName(level, scope))
+      const fd = openSync(`${path}.log`, 'a')
+      try {
+        const { size } = fstatSync(fd)
+        info = { path, fd, size }
+        fileMap.set(paramKey, info)
+      } catch (e) {
+        closeSync(fd)
         throw e
       }
     }
-    return filePath
+
+    if (info.size >= maxBytes) {
+      closeSync(info.fd)
+      rotateFile(i => `${info.path}${i ? `.${i}` : ''}.log`)
+      info.fd = openSync(`${info.path}.log`, 'a')
+      info.size = 0
+    }
+
+    return info
   }
 
   return (date, msg, level, scope, e) => {
+    const info = getFileInfo(level, scope as T)
     const timestamp = timeFormat(date)
-    const filePath = getPath(level, scope)
 
     const list = [timestamp, level.toUpperCase()]
     if (scope) {
@@ -112,7 +131,8 @@ export function createFileReporter<T extends string>(
     if (e) {
       logMessage += `\n${e.message}\n${e.stack}`
     }
+    logMessage += '\n'
 
-    appendFileSync(filePath, logMessage + '\n')
+    info.size += writeSync(info.fd, Buffer.from(logMessage))
   }
 }
