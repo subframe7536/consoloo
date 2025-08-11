@@ -25,7 +25,7 @@ export function createNodeLogger<T extends string>(
     std,
   } = option
   if (std) {
-    reporter.push(createStdioReporter(timeFormat))
+    reporter.push(createStdioReporter({ timeFormat }))
   }
   return createLogger<T>(logMode, reporter)
 }

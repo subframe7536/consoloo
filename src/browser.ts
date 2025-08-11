@@ -16,3 +16,5 @@ export function createBrowserLogger<T extends string>(
     [createBrowserReporter<T>(timeFormat)],
   )
 }
+
+export { createLogger }

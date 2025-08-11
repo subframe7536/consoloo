@@ -1,55 +1,18 @@
-import type { LogLevel, Reporter } from '../type'
+import type { Reporter } from '../type'
+import type { MessageFormatter } from './utils'
 
-import { blue, bold, cyan, dim, green, magenta, red, yellow } from 'ansis'
-import { isError } from 'normal-error'
-
-import { toNormalizedError } from '../core'
-
-const colors = {
-  info: green,
-  debug: blue,
-  warn: yellow,
-  error: red,
-  time: magenta,
+import { defaultStdFormatter } from './utils'
+export interface StdReporterOptions<T extends string> {
+  /**
+   * Log time format function
+   */
+  timeFormat?: (date: Date) => string
+  /**
+   * Custom function to format log message,
+   * default to {@link defaultStdFormatter}
+   */
+  logMessage?: MessageFormatter<T>
 }
-
-const CWD_REGEXP = new RegExp(process.cwd().replace(/\\/g, '/'), 'i')
-const LOCATION_REGEX = /:[^)]+/
-const PAREN_REGEX = /\((.*)\)/
-const BACK_SLASH_REGEX = /\\/g
-const TAG_REGEX = /(.*): (.*)/
-function parseStack(stack: string, level: LogLevel): string {
-  const _s = stack.split(/\r?\n/)
-  const _stack = _s
-    .slice(1)
-    .map(l => l
-      .replace('file://', '')
-      .replace(' at', blue`@`)
-      .replace(BACK_SLASH_REGEX, '/')
-      .replace(CWD_REGEXP, '.')
-      .replace(LOCATION_REGEX, green)
-      .replace(PAREN_REGEX, (_, path) => `(${yellow(path)})`),
-    )
-  return [_s[0].replace(
-    TAG_REGEX,
-    (_, name: string, msg: string) => `${colors[level].bold(name.toUpperCase())}: ${bold(msg)}`,
-  )]
-    .concat(_stack)
-    .join('\n')
-}
-
-function parseMsg(msg: any): string {
-  try {
-    return typeof msg === 'string'
-      ? msg
-      : isError(msg)
-        ? msg.message
-        : JSON.stringify(msg)
-  } catch {
-    return '' + msg
-  }
-}
-
 /**
  * Creates a reporter function that outputs logs to the terminal.
  *
@@ -65,25 +28,14 @@ function parseMsg(msg: any): string {
  */
 
 export function createStdioReporter<T extends string>(
-  timeFormat: (date: Date) => string,
+  options: StdReporterOptions<T> = {},
 ): Reporter<T> {
+  const {
+    timeFormat = (date: Date) => date.toLocaleString(),
+    logMessage = defaultStdFormatter,
+  } = options
   return (date, msg, level, scope, e) => {
-    if (level === 'timer') {
-      process.stdout.write(`${colors.time(timeFormat(date))} | ${bold.bgCyan(` ${scope} `)} ${msg}`)
-      return
-    }
-    let terminalLog = [
-      magenta(date.toLocaleString()),
-      colors[level as LogLevel](level.toUpperCase().padEnd(5)),
-      (scope ? cyan(scope.padEnd(7)) : dim`default`),
-      parseMsg(msg),
-    ].join(' | ')
-
-    if (e) {
-      const _e = toNormalizedError(e)
-      terminalLog += '\n' + parseStack(_e.stack, level)
-    }
-
-    process[((level === 'error' || level === 'warn') ? 'stderr' : 'stdout')].write(terminalLog + '\n')
+    const message = logMessage(date, msg, level as any, scope as T, e, timeFormat)
+    process[((level === 'error' || level === 'warn') ? 'stderr' : 'stdout')].write(message + '\n')
   }
 }

@@ -1,4 +1,5 @@
 import type { LogLevel, Reporter } from '../type'
+import type { MessageFormatter } from './utils'
 
 import {
   closeSync,
@@ -10,6 +11,8 @@ import {
   writeSync,
 } from 'node:fs'
 import { join } from 'node:path'
+
+import { defaultMessageFormatter } from './utils'
 
 export interface FileReporterOptions<T extends string> {
   /**
@@ -41,6 +44,11 @@ export interface FileReporterOptions<T extends string> {
    * ```
    */
   getLogFileName?: (level: LogLevel | 'timer', scope?: T) => string
+  /**
+   * Custom function to format log message,
+   * default to {@link defaultMessageFormatter}
+   */
+  logMessage?: MessageFormatter<T>
 }
 
 /**
@@ -65,6 +73,7 @@ export function createFileReporter<T extends string>(
     maxBackups = 50,
     timeFormat = (date: Date) => date.toLocaleString(),
     getLogFileName = () => 'app',
+    logMessage = defaultMessageFormatter,
   } = options
 
   interface FileInfo {
@@ -122,19 +131,7 @@ export function createFileReporter<T extends string>(
 
   return (date, msg, level, scope, e) => {
     const info = getFileInfo(level, scope as T)
-    const timestamp = timeFormat(date)
-
-    const list = [timestamp, level.toUpperCase()]
-    if (scope) {
-      list.push(scope)
-    }
-    list.push(msg)
-    let logMessage = list.join(' | ')
-    if (e) {
-      logMessage += `\n${e.message}\n${e.stack}`
-    }
-    logMessage += '\n'
-
-    info.size += writeSync(info.fd, Buffer.from(logMessage))
+    const message = `${logMessage(date, msg, level as any, scope as T, e, timeFormat)}\n`
+    info.size += writeSync(info.fd, Buffer.from(message))
   }
 }

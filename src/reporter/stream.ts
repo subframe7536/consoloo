@@ -1,11 +1,19 @@
 import type { Reporter } from '../type'
+import type { MessageFormatter } from './utils'
 import type { Writable } from 'node:stream'
 
-export interface StreamReporterOptions {
+import { defaultMessageFormatter } from './utils'
+
+export interface StreamReporterOptions<T extends string> {
   /**
    * Log time format function
    */
   timeFormat?: (date: Date) => string
+  /**
+   * Custom function to format log message,
+   * default to {@link defaultMessageFormatter}
+   */
+  logMessage?: MessageFormatter<T>
   /**
    * Flush queue when it reaches this count
    * @default 100
@@ -29,10 +37,11 @@ export interface StreamReporterOptions {
  *
  */
 export function createStreamReporter<T extends string>(
-  options: StreamReporterOptions,
+  options: StreamReporterOptions<T>,
 ): Reporter<T> {
   const {
     timeFormat = (date: Date) => date.toLocaleString(),
+    logMessage = defaultMessageFormatter,
     flushCount = 100,
     flushTimeout = 1000,
     stream,
@@ -58,18 +67,8 @@ export function createStreamReporter<T extends string>(
   }
 
   return (date, msg, level, scope, e) => {
-    const timestamp = timeFormat(date)
-    const list = [timestamp, level.toUpperCase()]
-    if (scope) {
-      list.push(scope)
-    }
-    list.push(msg)
-    let logMessage = list.join(' | ')
-    if (e) {
-      logMessage += `\n${e.message}\n${e.stack}`
-    }
-
-    queue.push(`${logMessage}\n`)
+    const message = logMessage(date, msg, level as any, scope as T, e, timeFormat)
+    queue.push(message + '\n')
 
     if (queue.length >= flushCount) {
       flush()

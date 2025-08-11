@@ -6,10 +6,9 @@ export type LogLevel = typeof _LEVEL[number]
 
 export type LogMode = 'disable' | 'info' | 'debug' | 'error'
 
-type LogFn<Level extends LogLevel, S extends string, WithScope extends boolean> =
-  Level extends 'error'
-    ? (msg: string | object, e?: unknown, ...args: WithScope extends true ? [scope?: S] : []) => void
-    : (msg: string | object, ...args: WithScope extends true ? [scope?: S] : []) => void
+type LogFn<Level extends LogLevel, S extends string, WithScope extends boolean> = Level extends 'error'
+  ? (msg: string | object, e?: unknown, ...args: WithScope extends true ? [scope?: S] : []) => void
+  : (msg: string | object, ...args: WithScope extends true ? [scope?: S] : []) => void
 
 interface LogUtilFn<S extends string> {
   /**
@@ -24,10 +23,11 @@ type LogBaseFn<S extends string, WithScope extends boolean = true> = {
   [K in LogLevel]: LogFn<K, S, WithScope>
 }
 
-export type Reporter<S extends string = string> = {
-  (date: Date, msg: any, level: LogLevel, scope?: S, e?: NormalizedError): void
-  (date: Date, msg: any, level: 'timer', scope: string, e?: never): void
+export type ReportFn<R, S extends string = string> = {
+  (date: Date, msg: any, level: LogLevel, scope?: S, e?: NormalizedError): R
+  (date: Date, msg: any, level: 'timer', scope: string, e?: never): R
 }
+export type Reporter<S extends string = string> = ReportFn<void, S>
 
 export type Logger<S extends string> = Prettify<LogBaseFn<S> & LogUtilFn<S> & {
   /**
