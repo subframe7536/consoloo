@@ -4,6 +4,10 @@ import { createLogger } from './core'
 import { createStdioReporter } from './reporter/stdio'
 
 export interface NodeLoggerOption extends LoggerOption {
+  /**
+   * Whether log to console
+   */
+  std?: boolean
   reporter?: Reporter[]
 }
 
@@ -14,6 +18,14 @@ export interface NodeLoggerOption extends LoggerOption {
 export function createNodeLogger<T extends string>(
   option: NodeLoggerOption = {},
 ): Logger<T> {
-  const { logMode = 'info', timeFormat = date => date.toLocaleString(), reporter = [] } = option
-  return createLogger<T>(logMode, [createStdioReporter(timeFormat), ...reporter])
+  const {
+    logMode = 'info',
+    timeFormat = date => date.toLocaleString(),
+    reporter = [],
+    std,
+  } = option
+  if (std) {
+    reporter.push(createStdioReporter(timeFormat))
+  }
+  return createLogger<T>(logMode, reporter)
 }
