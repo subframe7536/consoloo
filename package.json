@@ -32,7 +32,7 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite serve dev",
+    "dev": "bun ./dev/index.html",
     "build": "tsdown",
     "test": "bun tests/index.test.ts",
     "test:clean": "bun tests/index.test.ts clean",
@@ -45,16 +45,15 @@
   },
   "dependencies": {
     "@subframe7536/type-utils": "^0.2.0",
-    "ansis": "^4.0.0",
+    "ansis": "^4.1.0",
     "normal-error": "^0.2.0"
   },
   "devDependencies": {
-    "@subframe7536/eslint-config": "^1.2.4",
-    "@types/node": "^22.15.17",
-    "bumpp": "^10.1.0",
-    "eslint": "^9.26.0",
-    "tsdown": "^0.11.1",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.5"
+    "@subframe7536/eslint-config": "^1.3.2",
+    "@types/node": "^22.17.1",
+    "bumpp": "^10.2.2",
+    "eslint": "^9.33.0",
+    "tsdown": "^0.14.0",
+    "typescript": "^5.9.2"
   }
 }
