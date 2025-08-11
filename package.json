@@ -32,10 +32,9 @@
   "scripts": {
     "dev": "bun ./dev/index.html",
     "build": "tsdown",
-    "test": "bun tests/index.test.ts",
-    "test:clean": "bun tests/index.test.ts clean",
+    "test": "bun test",
     "format": "eslint . --fix",
-    "release": "pnpm test:clean && pnpm build && bumpp --all && npm publish"
+    "release": "bun run test && bun run build && bumpp --all && npm publish"
   },
   "publishConfig": {
     "access": "public",
@@ -50,6 +49,7 @@
     "@subframe7536/type-utils": "^0.2.0",
     "@types/node": "^22.17.1",
     "bumpp": "^10.2.2",
+    "bun-types": "^1.2.20",
     "eslint": "^9.33.0",
     "tsdown": "^0.14.0",
     "typescript": "^5.9.2"

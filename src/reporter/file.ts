@@ -93,8 +93,17 @@ export function createFileReporter<T extends string>(
 
   function getFileInfo(level: LogLevel | 'timer', scope?: T): FileInfo {
     const paramKey = `${level}:${scope}`
-    let info = fileMap.get(paramKey)
+    const existingInfo = fileMap.get(paramKey)
 
+    // Rotate if size exceeds the limit
+    if (existingInfo && existingInfo.size >= maxBytes) {
+      closeSync(existingInfo.fd)
+      rotateFile(i => `${existingInfo.path}${i ? `.${i}` : ''}.log`)
+      fileMap.delete(paramKey)
+    }
+
+    // Get fresh info if it doesn't exist or was deleted
+    let info = fileMap.get(paramKey)
     if (!info) {
       const path = join(logDir, getLogFileName(level, scope))
       const fd = openSync(`${path}.log`, 'a')
@@ -106,13 +115,6 @@ export function createFileReporter<T extends string>(
         closeSync(fd)
         throw e
       }
-    }
-
-    if (info.size >= maxBytes) {
-      closeSync(info.fd)
-      rotateFile(i => `${info.path}${i ? `.${i}` : ''}.log`)
-      info.fd = openSync(`${info.path}.log`, 'a')
-      info.size = 0
     }
 
     return info

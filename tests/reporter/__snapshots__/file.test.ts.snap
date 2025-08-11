@@ -1,0 +1,28 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`File Reporter should log a simple message and match snapshot 1`] = `
+"mock-date | INFO | test | hello world
+"
+`;
+
+exports[`File Reporter should handle error logging and match snapshot 1`] = `
+"mock-date | ERROR | app | an error occurred
+test error
+mock stack trace
+"
+`;
+
+exports[`File Reporter should use custom getLogFileName and match snapshot 1`] = `
+"mock-date | WARN | custom-scope | custom file name
+"
+`;
+
+exports[`File Reporter should rotate log file when size exceeds maxSize: new_log_after_rotation 1`] = `
+"mock-date | INFO | test | message 2
+"
+`;
+
+exports[`File Reporter should rotate log file when size exceeds maxSize: rotated_log_content 1`] = `
+"mock-date | INFO | test | message 1
+"
+`;
